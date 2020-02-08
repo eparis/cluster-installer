@@ -376,7 +376,7 @@ def destroy_cluster(args):
     version.destroy(cluster)
     shutil.rmtree(cluster)
 
-def main():
+def get_single_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version')
     parser.add_argument('--name')
@@ -392,7 +392,10 @@ def main():
 
     parser_destroy = subparsers.add_parser('destroy', help='Destroy a cluster')
     parser_destroy.set_defaults(func=destroy_cluster)
+    return parser
 
+def main():
+    parser = get_single_parser()
     args = parser.parse_args()
     args.func(args)
 
