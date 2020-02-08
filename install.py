@@ -333,12 +333,16 @@ class Versions:
         return path
 
     def install(self, path, env):
+        cwd = os.getcwd()
         os.chdir(path)
         subprocess.run([self.install_path, "create", "cluster"], check=True, text=True, env=env)
+        os.chdir(cwd)
 
     def destroy(self, path):
+        cwd = os.getcwd()
         os.chdir(path)
         subprocess.run([self.install_path, "destroy", "cluster"], check=True, text=True)
+        os.chdir(cwd)
 
 def get_cluster_dir(args):
     cloud, cloud_data = get_cloud_info(args=args)
