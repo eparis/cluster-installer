@@ -335,16 +335,19 @@ class Versions:
         return path
 
     def install(self, path, env):
+        print("Installing %s" % path)
         cwd = os.getcwd()
         os.chdir(path)
-        subprocess.run([self.install_path, "create", "cluster"], check=True, text=True, env=env)
+        ret = subprocess.run([self.install_path, "create", "cluster"], check=True, capture_output=True, text=True, env=env)
         os.chdir(cwd)
+        return ret.stdout
 
     def destroy(self, path):
         cwd = os.getcwd()
         os.chdir(path)
-        subprocess.run([self.install_path, "destroy", "cluster"], check=True, text=True)
+        ret = subprocess.run([self.install_path, "destroy", "cluster"], check=True, capture_output=True, text=True)
         os.chdir(cwd)
+        return ret.stdout
 
 def get_cluster_dir(args):
     cloud, cloud_data = get_cloud_info(args=args)
@@ -358,7 +361,7 @@ def get_cluster_dir(args):
 def install_cluster(args):
     cluster_dir, env = get_cluster_dir(args=args)
     version = Versions(args=args)
-    version.install(path=cluster_dir, env=env)
+    args.stdout = version.install(path=cluster_dir, env=env)
 
 def get_running_clusters():
     dirs = glob.glob("*/metadata.json")
@@ -375,7 +378,7 @@ def destroy_cluster(args):
     cluster = cluster_to_destroy(args)
     version = Versions(args=args, latest_cached=True)
     print("Destroying %s" % cluster)
-    version.destroy(cluster)
+    args.stdout = version.destroy(cluster)
     shutil.rmtree(cluster)
 
 class SingleInstaller():
@@ -403,7 +406,8 @@ class SingleInstaller():
         parser = self.parser()
         args = parser.parse_args()
         args.func(args)
+        return args.stdout
 
 if __name__ == "__main__":
     single_installer = SingleInstaller()
-    single_installer.main()
+    print(single_installer.main())

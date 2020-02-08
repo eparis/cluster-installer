@@ -2,6 +2,7 @@
 
 import argparse
 import getpass
+import multiprocessing.dummy
 import yaml
 from install import SingleInstaller
 
@@ -83,15 +84,19 @@ def destroy_clusters():
     destroy_args = get_destroy_args()
     do_args(destroy_args)
 
-def do_args(cluster_args):
+def do_arg(cluster_arg):
     single_installer = SingleInstaller()
     parser = single_installer.parser()
-    for cluster in cluster_args:
-        print(cluster)
-        args = parser.parse_args(cluster)
-        print("Handling %s" % args.name)
-        #args.func(args)
+    print(cluster_arg)
+    args = parser.parse_args(cluster_arg)
+    print("Handling %s" % args.name)
+    args.func(args)
+    print(args.stdout)
 
+def do_args(cluster_args):
+    # do up to 8 at a time.
+    with multiprocessing.dummy.Pool(processes=8) as pool:
+        pool.map(do_arg, cluster_args)
 
 def get_parser():
     parser = argparse.ArgumentParser()
