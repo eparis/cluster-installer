@@ -1,0 +1,7 @@
+clusters:
+  - cloud: aws
+    name: summit-hub
+    worker-size: large
+  - cloud: aws
+  - cloud: gcp
+  - cloud: azure

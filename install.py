@@ -170,6 +170,7 @@ def get_cloud_info(args):
             }
         }
         AZURE_BASE_DOMAINS = {
+            'default': 'architects.azure.devcluster.openshift.com',
             'OpenShift Architects': 'architects.azure.devcluster.openshift.com',
         }
         def __init__(self, args):
