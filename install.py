@@ -49,7 +49,7 @@ def get_cloud_info(args):
         def __init__(self, platform):
             self._install_config = yaml.safe_load(INSTALL_CONFIG)
             self._install_config['platform'] = platform
-            self.envs = None
+            self.envs = os.environ.copy()
 
             path = "./pullsecret"
             self._set_pull_secret(path)
@@ -123,14 +123,12 @@ def get_cloud_info(args):
             profile_name = args.profile
             if not profile_name:
                 profile_name, _ = pick(self.get_credentials())
-            envs = os.environ.copy()
-            envs['AWS_PROFILE'] = profile_name
+            self.envs['AWS_PROFILE'] = profile_name
             if profile_name in self.AWS_BASE_DOMAINS:
                 self.base_domain = self.AWS_BASE_DOMAINS[profile_name]
             else:
                 raise KeyError("don't konw base domain for %s" % profile_name)
             self._install_config['baseDomain'] = self.base_domain
-            self.envs = envs
 
             instance = args.master_size
             if not instance:
@@ -149,8 +147,10 @@ def get_cloud_info(args):
                 'region': 'us-central1',
             }
         }
+        # GCP_DEFAULT_MASTER = 'n1-standard-4'
+        # GCP_DEFAUKT_WORKER = 'n1-standard-4'
         GCP_PROFILES = {
-            'dev': {'base_domain': 'gcp.devcluster.openshift.com'},
+            'openshift-gce-devel': {'base_domain': 'gcp.devcluster.openshift.com'},
         }
         def __init__(self, args):
             CloudData.__init__(self, platform=self.GCP_PLATFORM)
@@ -160,12 +160,32 @@ def get_cloud_info(args):
             profile = self.GCP_PROFILES[profile_name]
             self._install_config['baseDomain'] = profile['base_domain']
 
+    class AzureData(CloudData):
+        AZURE_PLATFORM = {
+            'azure': {
+                'baseDomainResourceGroupName': 'os4-common',
+                'region': 'centralus',
+            }
+        }
+        AZURE_BASE_DOMAINS = {
+            'OpenShift Architects': 'architects.azure.devcluster.openshift.com',
+        }
+        def __init__(self, args):
+            CloudData.__init__(self, platform=self.AZURE_PLATFORM)
+            subscription = args.profile
+            if not subscription:
+                subscription, _ = pick(list(self.AZURE_BASE_DOMAINS.keys()), 'Pick Subscription')
+            self._install_config['baseDomain'] = self.AZURE_BASE_DOMAINS[subscription]
+
+    # This is the start of the actual code for get_cloud_info()
     CLOUDS = {
         'aws': AWSData,
+        'azure': AzureData,
         'gcp': GCPData,
     }
     cloud = args.cloud
     if not cloud:
+        print(CLOUDS.keys())
         cloud, _ = pick(list(CLOUDS.keys()), 'Pick Cloud')
     cloud_data = CLOUDS[cloud](args=args)
     return cloud, cloud_data
@@ -311,9 +331,9 @@ class Versions:
         path = self.download_version(version, url)
         return path
 
-    def install(self, path):
+    def install(self, path, env):
         os.chdir(path)
-        subprocess.run([self.install_path, "create", "cluster"], check=True, text=True, env=self.envs)
+        subprocess.run([self.install_path, "create", "cluster"], check=True, text=True, env=env)
 
     def destroy(self, path):
         os.chdir(path)
@@ -326,15 +346,16 @@ def get_cluster_dir(args):
     print("Cluster Name: %s" % name)
     cloud_data.set_cluster_name(name)
     cloud_data.write_install_config(path)
-    return path
+    return path, cloud_data.envs
 
 def install_cluster(args):
-    cluster_dir = get_cluster_dir(args=args)
+    cluster_dir, env = get_cluster_dir(args=args)
     version = Versions(args=args)
-    #version.install(cluster_dir)
+    version.install(path=cluster_dir, env=env)
 
 def get_running_clusters():
-    dirs = glob.glob("eparis-*")
+    dirs = glob.glob("*/metadata.json")
+    dirs = [cluster.split("/")[0] for cluster in dirs]
     return dirs
 
 def cluster_to_destroy(args):
@@ -355,16 +376,15 @@ parser.add_argument('--name')
 subparsers = parser.add_subparsers()
 
 # create the parser for the "a" command
-parser_install = subparsers.add_parser('install', help='Install a cluster')
-parser_install.set_defaults(func=install_cluster)
-parser_install.add_argument('--cloud')
-parser_install.add_argument('--profile')
-parser_install.add_argument('--master-size')
-parser_install.add_argument('--worker-size')
+parser_create = subparsers.add_parser('create', help='Install a cluster')
+parser_create.set_defaults(func=install_cluster)
+parser_create.add_argument('--cloud')
+parser_create.add_argument('--profile')
+parser_create.add_argument('--master-size')
+parser_create.add_argument('--worker-size')
 
 parser_destroy = subparsers.add_parser('destroy', help='Destroy a cluster')
 parser_destroy.set_defaults(func=destroy_cluster)
-
 
 args = parser.parse_args()
 args.func(args)
