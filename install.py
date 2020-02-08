@@ -381,7 +381,7 @@ class SingleInstaller():
         parser = argparse.ArgumentParser()
         subparsers = parser.add_subparsers(dest='command', required=True)
 
-        global_parser = argparse.ArgumentParser(add_help=False)q
+        global_parser = argparse.ArgumentParser(add_help=False)
         global_parser.add_argument('--version')
         global_parser.add_argument('--name')
 
