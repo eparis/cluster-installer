@@ -372,32 +372,36 @@ def cluster_to_destroy(args):
 def destroy_cluster(args):
     cluster = cluster_to_destroy(args)
     version = Versions(args=args, latest_cached=True)
-    print("Destroying %s!" % cluster)
+    print("Destroying %s" % cluster)
     version.destroy(cluster)
     shutil.rmtree(cluster)
 
-def get_single_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--version')
-    parser.add_argument('--name')
-    subparsers = parser.add_subparsers(dest='command', required=True)
+class SingleInstaller():
+    def parser(self):
+        parser = argparse.ArgumentParser()
+        subparsers = parser.add_subparsers(dest='command', required=True)
 
-    # create the parser for the "a" command
-    parser_create = subparsers.add_parser('create', help='Install a cluster')
-    parser_create.set_defaults(func=install_cluster)
-    parser_create.add_argument('--cloud')
-    parser_create.add_argument('--profile')
-    parser_create.add_argument('--master-size')
-    parser_create.add_argument('--worker-size')
+        global_parser = argparse.ArgumentParser(add_help=False)q
+        global_parser.add_argument('--version')
+        global_parser.add_argument('--name')
 
-    parser_destroy = subparsers.add_parser('destroy', help='Destroy a cluster')
-    parser_destroy.set_defaults(func=destroy_cluster)
-    return parser
+        # create the parser for the "a" command
+        parser_create = subparsers.add_parser('create', help='Install a cluster', parents=[global_parser])
+        parser_create.set_defaults(func=install_cluster)
+        parser_create.add_argument('--cloud')
+        parser_create.add_argument('--profile')
+        parser_create.add_argument('--master-size')
+        parser_create.add_argument('--worker-size')
 
-def main():
-    parser = get_single_parser()
-    args = parser.parse_args()
-    args.func(args)
+        parser_destroy = subparsers.add_parser('destroy', help='Destroy a cluster', parents=[global_parser])
+        parser_destroy.set_defaults(func=destroy_cluster)
+        return parser
+
+    def main(self):
+        parser = self.parser()
+        args = parser.parse_args()
+        args.func(args)
 
 if __name__ == "__main__":
-    main()
+    single_installer = SingleInstaller()
+    single_installer.main()
