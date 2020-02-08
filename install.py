@@ -7,6 +7,7 @@ import getpass
 import glob
 import os
 from pathlib import Path
+import shutil
 import stat
 import subprocess
 import tarfile
@@ -185,7 +186,6 @@ def get_cloud_info(args):
     }
     cloud = args.cloud
     if not cloud:
-        print(CLOUDS.keys())
         cloud, _ = pick(list(CLOUDS.keys()), 'Pick Cloud')
     cloud_data = CLOUDS[cloud](args=args)
     return cloud, cloud_data
@@ -300,6 +300,7 @@ class Versions:
 
     def list_versions(self):
         versions = {}
+        print("Downloading list of versions.")
         versions.update(self.get_latest_nightly_versions())
         versions.update(self.get_latest_release_versions())
         versions.update(self.get_cached_versions())
@@ -365,10 +366,12 @@ def cluster_to_destroy(args):
     return cluster
 
 def destroy_cluster(args):
-    print("Destroying!")
     cluster = cluster_to_destroy(args)
     version = Versions(args=args, latest_cached=True)
+    print("Destroying %s!" % cluster)
     version.destroy(cluster)
+    shutil.rmtree(cluster)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--version')
