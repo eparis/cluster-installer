@@ -376,22 +376,25 @@ def destroy_cluster(args):
     version.destroy(cluster)
     shutil.rmtree(cluster)
 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--version')
+    parser.add_argument('--name')
+    subparsers = parser.add_subparsers(dest='command', required=True)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--version')
-parser.add_argument('--name')
-subparsers = parser.add_subparsers()
+    # create the parser for the "a" command
+    parser_create = subparsers.add_parser('create', help='Install a cluster')
+    parser_create.set_defaults(func=install_cluster)
+    parser_create.add_argument('--cloud')
+    parser_create.add_argument('--profile')
+    parser_create.add_argument('--master-size')
+    parser_create.add_argument('--worker-size')
 
-# create the parser for the "a" command
-parser_create = subparsers.add_parser('create', help='Install a cluster')
-parser_create.set_defaults(func=install_cluster)
-parser_create.add_argument('--cloud')
-parser_create.add_argument('--profile')
-parser_create.add_argument('--master-size')
-parser_create.add_argument('--worker-size')
+    parser_destroy = subparsers.add_parser('destroy', help='Destroy a cluster')
+    parser_destroy.set_defaults(func=destroy_cluster)
 
-parser_destroy = subparsers.add_parser('destroy', help='Destroy a cluster')
-parser_destroy.set_defaults(func=destroy_cluster)
+    args = parser.parse_args()
+    args.func(args)
 
-args = parser.parse_args()
-args.func(args)
+if __name__ == "__main__":
+    main()
