@@ -336,17 +336,24 @@ class Versions:
 
     def install(self, path, env):
         print("Installing %s" % path)
-        cwd = os.getcwd()
-        os.chdir(path)
-        ret = subprocess.run([self.install_path, "create", "cluster"], check=True, capture_output=True, text=True, env=env)
-        os.chdir(cwd)
+        path_arg = "--dir=%s" % path
+        try:
+            ret = subprocess.run([self.install_path, "create", "cluster", path_arg], check=True, capture_output=True, text=True, env=env)
+        except subprocess.CalledProcessError as error:
+            print(ret.stdout)
+            print(ret.stderr)
+            raise error
         return ret.stdout
 
     def destroy(self, path):
-        cwd = os.getcwd()
-        os.chdir(path)
-        ret = subprocess.run([self.install_path, "destroy", "cluster"], check=True, capture_output=True, text=True)
-        os.chdir(cwd)
+        print("Destroying %s" % path)
+        path_arg = "--dir=%s" % path
+        try:
+            ret = subprocess.run([self.install_path, "destroy", "cluster", path_arg], check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as error:
+            print(ret.stdout)
+            print(ret.stderr)
+            raise error
         return ret.stdout
 
 def get_cluster_dir(args):
