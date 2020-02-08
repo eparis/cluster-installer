@@ -151,6 +151,7 @@ def get_cloud_info(args):
         # GCP_DEFAULT_MASTER = 'n1-standard-4'
         # GCP_DEFAUKT_WORKER = 'n1-standard-4'
         GCP_PROFILES = {
+            'default': {'base_domain': 'gcp.devcluster.openshift.com'},
             'openshift-gce-devel': {'base_domain': 'gcp.devcluster.openshift.com'},
         }
         def __init__(self, args):
