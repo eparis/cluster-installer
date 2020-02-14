@@ -61,9 +61,10 @@ def get_cloud_info(args):
             self._install_config['metadata']['name'] = name
 
         def _set_pull_secret(self):
-            path = os.path.join(os.getcwd(), "./pullsecret")
             try:
-                self.__set_pull_secret("./pullsecret")
+                path = os.path.join(os.getcwd(), "pullsecret")
+                self.__set_pull_secret(path)
+                return
             except:
                 pass
             self.__set_pull_secret(os.path.join(Path.home(), "pullsecret"))
