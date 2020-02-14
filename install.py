@@ -298,6 +298,8 @@ class Versions:
 
     def get_path_version(self):
         path = self.which("openshift-install")
+        if not path:
+            return {}
         ret = subprocess.run([path, "version"], check=True, capture_output=True, text=True)
         version = ret.stdout.split(sep='\n')[0].split()[-1]
         return {
