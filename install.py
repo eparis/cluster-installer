@@ -52,16 +52,23 @@ def get_cloud_info(args):
             self._install_config['platform'] = platform
             self.envs = os.environ.copy()
 
-            path = "./pullsecret"
-            self._set_pull_secret(path)
+            self._set_pull_secret()
 
-            path = str(Path.home()) + "/.ssh/openshift-dev.pub"
+            path = os.path.join(Path.home(), ".ssh/openshift-dev.pub")
             self._set_ssh_key(path)
 
         def set_cluster_name(self, name):
             self._install_config['metadata']['name'] = name
 
-        def _set_pull_secret(self, path):
+        def _set_pull_secret(self):
+            path = os.path.join(os.getcwd(), "./pullsecret")
+            try:
+                self.__set_pull_secret("./pullsecret")
+            except:
+                pass
+            self.__set_pull_secret(os.path.join(Path.home(), "pullsecret"))
+
+        def __set_pull_secret(self, path):
             with open(path, 'r') as f:
                 pullsecret = f.read()
                 pullsecret = pullsecret.replace('\n', '').replace(' ', '')
