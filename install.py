@@ -339,7 +339,7 @@ class Versions:
         if not version and latest_cached:
             version = self.latest_version(self.cached_versions(versions))
         if not version:
-            version, _ = pick(list(versions.keys()), "Pick a versions")
+            version, _ = pick(sorted(list(versions.keys())), "Pick a versions")
         url = versions[version]['url']
         path = self.download_version(version, url)
         return path
@@ -388,11 +388,16 @@ def get_running_clusters():
 def cluster_to_destroy(args):
     cluster = args.name
     if not cluster:
-        cluster, _ = pick(get_running_clusters(), 'Cluster To Destroy')
+        clusters = get_running_clusters()
+        if clusters:
+            cluster, _ = pick(clusters, 'Cluster To Destroy')
     return cluster
 
 def destroy_cluster(args):
     cluster = cluster_to_destroy(args)
+    if not cluster:
+        print("No clusters found to destroy")
+        return
     version = Versions(args=args, latest_cached=True)
     print("Destroying %s" % cluster)
     args.stdout = version.destroy(cluster)
@@ -423,8 +428,12 @@ class SingleInstaller():
         parser = self.parser()
         args = parser.parse_args()
         args.func(args)
-        return args.stdout
+        if "stdout" in args:
+            return args.stdout
+        return None
 
 if __name__ == "__main__":
     single_installer = SingleInstaller()
-    print(single_installer.main())
+    out = single_installer.main()
+    if out:
+        print(out)
