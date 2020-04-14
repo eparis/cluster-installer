@@ -153,7 +153,7 @@ def get_cloud_info(args):
         GCP_PLATFORM = {
             'gcp': {
                 'projectID': 'openshift-gce-devel',
-                'region': 'us-central1',
+                'region': 'us-east1',
             }
         }
         # GCP_DEFAULT_MASTER = 'n1-standard-4'
@@ -243,7 +243,7 @@ class Versions:
                     if not line.startswith("Name"):
                         continue
                     version = line.split()[-1]
-                    url = 'https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-%s/openshift-install-linux-%s.tar.gz' % (major, version)
+                    url = 'https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/latest-%s/openshift-install-linux-%s.tar.gz' % (major, version)
                     versions["nightly-"+version] = {
                         'url': url,
                         'cached': False,
